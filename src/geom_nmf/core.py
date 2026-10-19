@@ -4,20 +4,26 @@ geom_nmf.core
 Main GeomNMF pipeline: maximum-volume simplex fitting for geometric NMF.
 """
 
-import time
-from typing import NamedTuple
-import numpy as np
-import pandas as pd
+from __future__ import annotations
 
-from geom_nmf.endmembers import (
+import numbers
+import time
+from typing import TYPE_CHECKING, NamedTuple
+
+import numpy as np
+
+from .endmembers import (
+    estimate_H,
     get_hull_candidates,
     get_random_direction_candidates,
+    log_simplex_volume,
     prune_close_points,
-    estimate_H, 
-    log_simplex_volume
 )
-from geom_nmf.weights import estimate_weights, compute_Phi
-from geom_nmf.nfindr import nfindr
+from .nfindr import nfindr
+from .weights import compute_Phi, estimate_weights
+
+if TYPE_CHECKING:  # pragma: no cover
+    import pandas as pd
 
 
 class GeomNMFResult(NamedTuple):
@@ -97,7 +103,10 @@ def GeomNMF(
     prune : bool, optional
         If True, cluster the candidates and keep one representative per
         cluster before the exhaustive volume search.  Useful when the
-        candidate pool is large.  Default False.
+        candidate pool is large.  Because representatives are chosen near
+        cluster centroids, pruning can discard the true extreme points;
+        combining it with ``refine_greedy=True`` is recommended.
+        Default False.
     n_clusters : int or None, optional
         Target minimum number of clusters when *prune=True*.  The actual number
         returned may be lower if empty clusters reduce the count.  
@@ -114,8 +123,11 @@ def GeomNMF(
     Raises
     ------
     ValueError
-        If *Y* contains any NaN or Inf values, any negative values, any
-        all-zero rows, or if *candidate_method* is not ``"exact"`` or
+        If *Y* is not 2-D; contains any NaN or Inf values, any negative
+        values, or any all-zero rows; if *K* is not an integer with
+        ``2 <= K <= min(n, J)``; if the intrinsic rank of the row-normalized
+        data is smaller than ``K - 1`` (the data cannot support K
+        endmembers); or if *candidate_method* is not ``"exact"`` or
         ``"random"``.
 
     Returns
@@ -169,11 +181,27 @@ def GeomNMF(
             ``refine_greedy=False`` or refinement was skipped.
         * ``elapsed`` – float: total wall-clock run time in seconds.
     """
-    t_start = time.time()
+    t_start = time.perf_counter()
 
-    if isinstance(Y, pd.DataFrame):
-        Y = Y.to_numpy()
+    # accepts np.ndarray, pandas DataFrame, or any array-like
     Y = np.asarray(Y, dtype=float)
+
+    if Y.ndim != 2:
+        raise ValueError(f"Y must be a 2-D array of shape (n, J); got shape {Y.shape}.")
+    n, J = Y.shape
+    if isinstance(K, bool) or not isinstance(K, numbers.Integral):
+        raise ValueError(f"K must be an integer; got {K!r}.")
+    K = int(K)
+    if K < 2:
+        raise ValueError(f"K must be at least 2; got K={K}.")
+    if K > J:
+        raise ValueError(f"K must be <= J={J} (number of features); got K={K}.")
+    if K > n:
+        raise ValueError(f"K must be <= n={n} (number of observations); got K={K}.")
+    if candidate_method not in ("exact", "random"):
+        raise ValueError(
+            f"candidate_method must be 'exact' or 'random'; got {candidate_method!r}."
+        )
 
     # check bad data
     if not np.isfinite(Y).all():
@@ -196,7 +224,6 @@ def GeomNMF(
         )
 
     # Row sums and normalized data
-    n = Y.shape[0]
     r = Y.sum(axis=1, keepdims=True)
     Y_star = Y / r                           # (n, J)
 
@@ -208,6 +235,13 @@ def GeomNMF(
     mask = S_svd > rank_tol
     basis = Vt[mask].T                       # (J-1, rank)
     Yc_proj = Yc @ basis                     # (n, rank)
+    intrinsic_rank = int(mask.sum())
+    if intrinsic_rank < K - 1:
+        raise ValueError(
+            f"The row-normalized data has intrinsic (affine) rank {intrinsic_rank}, "
+            f"but K={K} endmembers require rank at least K-1={K - 1}. "
+            "Reduce K or check the data for duplicated / proportional rows."
+        )
 
     # --- Step 1: build candidate pool ---
     counts = None  # only populated for candidate_method="random"
@@ -215,7 +249,7 @@ def GeomNMF(
         cand_idx = get_hull_candidates(Yc_proj, verbose=verbose)
         cand_proj = Yc_proj[cand_idx]
 
-    elif candidate_method == "random":
+    else:  # candidate_method == "random"
         # Whiten (scale to unit covariance -> remove directional stretch and make all directions comparable) 
         # intrinsic coordinates before random projection
         C_cov = (Yc_proj.T @ Yc_proj) / max(n - 1, 1)
@@ -227,9 +261,6 @@ def GeomNMF(
             Yc_proj_w, seed=seed, n_directions=n_directions, n_top=n_top, n_candidates=n_candidates, verbose=verbose,
         )
         cand_proj = Yc_proj[cand_idx]        # un-whitened: pruning clusters in the same geometry as the volume objective
-
-    else:
-        raise ValueError("candidate_method must be 'exact' or 'random'.")
 
     cand_ambient = Y_star[cand_idx]          # (m, J)
 
@@ -299,10 +330,10 @@ def GeomNMF(
     mu_tilde_hat = W_tilde_hat.mean(axis=0)
     Phi_hat = compute_Phi(mu_tilde_hat, H_star_hat)
 
-    elapsed = time.time() - t_start
+    elapsed = time.perf_counter() - t_start
 
     fit_diagnostics = {
-        "intrinsic_rank": int(mask.sum()),
+        "intrinsic_rank": intrinsic_rank,
         "n_cand": len(H_candidates),
         "cand_idx": cand_idx,
         "direction_hit_counts": counts,                # np.ndarray if candidate_method="random", else None

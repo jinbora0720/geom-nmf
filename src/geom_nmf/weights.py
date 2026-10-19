@@ -4,7 +4,8 @@ geom_nmf.weights
 Intensity (mixing weight) recovery and source attribution matrix computation.
 """
 
-import warnings
+from __future__ import annotations
+
 import numpy as np
 
 
@@ -37,6 +38,8 @@ def compute_Phi(
     If all sources contribute zero to a feature (column of ``mu[:, None] * H``
     sums to zero), the corresponding column of *Phi* will be NaN.
     """
+    mu = np.asarray(mu, dtype=float)
+    H = np.asarray(H, dtype=float)
     numerator = mu[:, None] * H          # (K, J)
     denominator = numerator.sum(axis=0)  # (J,)
 
@@ -91,6 +94,7 @@ def estimate_weights(
         * ``"not_sum1_count"`` – number of such rows
 
     """
+    Y = np.asarray(Y, dtype=float)
     H_in = np.asarray(H, dtype=float)
     K, J = H_in.shape
     n = Y.shape[0]
@@ -111,7 +115,7 @@ def estimate_weights(
 
     G = H_aug @ H_aug.T 
     try:
-        condG = float(np.linalg.cond(G)) # large cond_G => small errors in H_aug amplified into large erros in H_aug_R
+        condG = float(np.linalg.cond(G)) # large cond_G => small errors in H_aug amplified into large errors in H_aug_R
     except np.linalg.LinAlgError:
         condG = float("inf")
     I_err = float(np.linalg.norm(H_aug @ H_aug_R - np.eye(K), ord=np.inf))
@@ -134,7 +138,7 @@ def estimate_weights(
 
     # clip negatives and renormalize.
     # note: if Y and H are both row stochastic and the model is well-specified,
-    # W_raw is already row stochastic and this is a no-oeration beyond numerical noise.
+    # W_raw is already row stochastic and this is a no-operation beyond numerical noise.
     # under misspecification, clipping introduces bias — use diag to assess severity.
     W = np.maximum(W_raw, 0.0)
     s = W.sum(axis=1, keepdims=True)

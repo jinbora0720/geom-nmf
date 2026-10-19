@@ -4,8 +4,11 @@ geom_nmf.utils
 Algorithmic utilities: endmember permutation matching 
 """
 
+from __future__ import annotations
+
 import numpy as np
 from scipy.optimize import linear_sum_assignment
+
 
 def permute_to_reference(
     H_ref: np.ndarray,

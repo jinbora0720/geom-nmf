@@ -6,10 +6,18 @@ projection extremes (approximate), plus clustering-based pruning.
 Volume scoring and exhaustive maximum-volume simplex search over a candidate set of endmember points.
 """
 
+from __future__ import annotations
+
 import time
-import numpy as np
+import warnings
 from itertools import combinations
-from scipy.special import gammaln, comb
+
+import numpy as np
+from scipy.special import comb, gammaln
+
+#: Number of K-subsets above which :func:`estimate_H` warns that the
+#: exhaustive search may be slow.
+LARGE_SEARCH_WARN = 50_000_000
 
 def get_hull_candidates(
     Yc_proj: np.ndarray,
@@ -17,6 +25,10 @@ def get_hull_candidates(
 ) -> np.ndarray:
     """
     Return convex-hull vertex indices of *Yc_proj* via QHull.
+
+    For one-dimensional input (intrinsic rank 1, e.g. ``K=2``) QHull is not
+    applicable; the hull "vertices" are then simply the minimum and maximum
+    points.
 
     Parameters
     ----------
@@ -32,14 +44,25 @@ def get_hull_candidates(
     """
     from scipy.spatial import ConvexHull
 
+    X = np.asarray(Yc_proj, dtype=float)
+    if X.ndim == 1:
+        X = X[:, None]
+
+    if X.shape[1] == 1:
+        x = X[:, 0]
+        vertices = np.unique([int(np.argmin(x)), int(np.argmax(x))])
+        if verbose:
+            print(f"1-D data: hull vertices are the extremes; #cands={len(vertices)}")
+        return vertices
+
     if verbose:
         print("Computing convex hull...", end="", flush=True)
 
-    start = time.time()
-    hull = ConvexHull(Yc_proj, qhull_options="Qx Qt Q12 Pp")
+    start = time.perf_counter()
+    hull = ConvexHull(X, qhull_options="Qx Qt Q12 Pp")
 
     if verbose:
-        print(f" done in {time.time() - start:.2f}s; #cands={len(hull.vertices)}")
+        print(f" done in {time.perf_counter() - start:.2f}s; #cands={len(hull.vertices)}")
 
     return hull.vertices
 
@@ -95,7 +118,7 @@ def get_random_direction_candidates(
             end="",
             flush=True,
         )
-    start = time.time()
+    start = time.perf_counter()
 
     batch = min(n_directions, 2048)
     remaining = n_directions
@@ -125,7 +148,7 @@ def get_random_direction_candidates(
         chosen_sorted = chosen_sorted[:n_candidates] # min(n, 2n_directions x n_top, n_candidates) candidates
 
     if verbose:
-        print(f" done in {time.time() - start:.2f}s; #cands={len(chosen_sorted)}")
+        print(f" done in {time.perf_counter() - start:.2f}s; #cands={len(chosen_sorted)}")
 
     return chosen_sorted, counts
 
@@ -246,6 +269,7 @@ def log_simplex_volume(
     r : int
         Affine rank of *subset* (number of non-negligible singular values).
     """
+    subset = np.asarray(subset, dtype=float)
     base = subset[0]
     A = subset[1:] - base              # edge matrix, shape (K-1, J)
     _, S, _ = np.linalg.svd(A, full_matrices=False)
@@ -270,6 +294,8 @@ def estimate_H(
 
     Exhaustively iterates over all C(m, K) combinations.  Feasible when
     the number of hull / candidate points is small (≲ a few hundred).
+    A :class:`RuntimeWarning` is emitted when the number of combinations
+    exceeds :data:`LARGE_SEARCH_WARN`.
 
     Parameters
     ----------
@@ -295,8 +321,21 @@ def estimate_H(
         If every K-subset of *hull_pts* forms a degenerate simplex (zero
         volume), e.g. when all candidates are collinear.
     """
+    hull_pts = np.asarray(hull_pts, dtype=float)
     m = int(hull_pts.shape[0])
+    if m < K:
+        raise RuntimeError(
+            f"Only {m} candidate point(s) available but K={K} endmembers requested."
+        )
     total = int(comb(m, K, exact=True))
+    if total > LARGE_SEARCH_WARN:
+        warnings.warn(
+            f"Exhaustive search over C({m}, {K}) = {total:,} subsets may be very slow. "
+            "Consider prune=True, candidate_method='random' with n_candidates, "
+            "or refine_greedy=True.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
     if verbose:
         print(f"H candidates={m}, K={K}, combinations={total:,}")
 

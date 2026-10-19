@@ -10,9 +10,15 @@ Winter, M. E. (1999). N-FINDR: An algorithm for fast autonomous spectral
 end-member determination in hyperspectral data. 
 """
 
+from __future__ import annotations
+
 import math
+from typing import TYPE_CHECKING
+
 import numpy as np
-import pandas as pd
+
+if TYPE_CHECKING:  # pragma: no cover
+    import pandas as pd
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +162,7 @@ def nfindr(
 
     Parameters
     ----------
-    Y : np.ndarray or pd.DataFrame, shape (n, J) or (rows, cols, J)
+    Y : array-like or pd.DataFrame, shape (n, J) or (rows, cols, J)
         Input spectral data.  Can be a 2-D matrix or a 3-D hyperspectral
         cube; the cube is reshaped to (rows*cols, J) internally.
         All entries should be nonnegative (typical for spectral data).
@@ -220,9 +226,8 @@ def nfindr(
         vol = |det(M)| / (K-1)!,   M = [[Z.T], [1...1]]  ∈ R^{K×K}
     """
 
-    # process data to a working matrix
-    if isinstance(Y, pd.DataFrame):
-        Y = Y.to_numpy()
+    # process data to a working matrix (accepts ndarray, DataFrame, array-like)
+    Y = np.asarray(Y, dtype=float)
 
     if Y.ndim == 3:
         rows, cols, J = Y.shape

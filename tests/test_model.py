@@ -63,9 +63,13 @@ def test_alignment_error(synthetic_data, geom_nmf_result):
 
 
 def test_barplot_runs(geom_nmf_result):
+    import matplotlib.pyplot as plt
+
     feature_labels = [f"F{j+1}" for j in range(J)]
-    barplot_Phi(
+    fig, _ = barplot_Phi(
         geom_nmf_result.Phi,
         title="Estimated source attribution (GeomNMF)",
         feature_labels=feature_labels,
+        show=False,
     )
+    plt.close(fig)
