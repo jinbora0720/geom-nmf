@@ -1,0 +1,87 @@
+cff-version: 1.2.0
+message: >-
+  If you use geom-nmf in your work, please cite the GeomNMF methods paper
+  (see "preferred-citation" below) and, optionally, this software.
+type: software
+title: "geom-nmf: Geometric non-negative matrix factorization via maximum-volume simplex fitting"
+abstract: >-
+  geom-nmf implements geometric non-negative matrix factorization (GeomNMF)
+  for source apportionment. Assuming a simplex mixing model Y ≈ WH, it
+  estimates source profiles as the vertices of the maximum-volume simplex
+  inscribed in the convex hull of the row-normalized data, then recovers
+  mixing weights and a source attribution matrix.
+authors:
+  - family-names: Jin
+    given-names: Bora
+    email: jinbora0720@gmail.com
+    affiliation: Colorado School of Mines
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+version: 0.1.0a0
+license: MIT
+repository-code: "https://github.com/jinbora0720/geom-nmf"
+url: "https://github.com/jinbora0720/geom-nmf"
+keywords:
+  - non-negative matrix factorization
+  - source apportionment
+  - endmember extraction
+  - simplex
+  - identifiability
+  - air quality
+
+preferred-citation:
+  type: article
+  title: "Geometric Identification and Consistent Estimation of Source Apportionment with Application to Greenland Summit Aerosols"
+  authors:
+    - family-names: Jin
+      given-names: Bora
+    - family-names: Spada
+      given-names: Nicholas J.
+    - family-names: Creamean
+      given-names: Jessie
+    - family-names: Shupe
+      given-names: Matthew
+    - family-names: Datta
+      given-names: Abhirup
+  year: 2025
+  journal: arXiv preprint
+  identifiers:
+    - type: other
+      value: "arXiv:2510.03616"
+  url: "https://arxiv.org/abs/2510.03616"
+
+references:
+  - type: article
+    title: "Source apportionment of air pollution burden using geometric non-negative matrix factorization and high-throughput multi-pollutant air sensor data in Curtis Bay, Baltimore, USA"
+    authors:
+      - family-names: Jin
+        given-names: Bora
+      - family-names: Salmerón
+        given-names: Bonita D.
+      - family-names: McClosky
+        given-names: David
+      - family-names: Hagan
+        given-names: David H.
+      - family-names: Dickerson
+        given-names: Russell R.
+      - family-names: Spada
+        given-names: Nicholas J.
+      - family-names: Deanes
+        given-names: Lauren N.
+      - family-names: Aubourg
+        given-names: Matthew A.
+      - family-names: Ramprasad
+        given-names: Tarunika
+      - family-names: Schmidt
+        given-names: Laura E.
+      - family-names: Sawtell
+        given-names: Gregory G.
+      - family-names: Heaney
+        given-names: Christopher D.
+      - family-names: Datta
+        given-names: Abhirup
+    year: 2025
+    journal: arXiv preprint
+    identifiers:
+      - type: other
+        value: "arXiv:2511.11833"
+    url: "https://arxiv.org/abs/2511.11833"
