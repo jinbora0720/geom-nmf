@@ -16,7 +16,7 @@ authors:
     email: jinbora0720@gmail.com
     affiliation: Colorado School of Mines
     # orcid: "https://orcid.org/0000-0000-0000-0000"
-version: 0.1.0a0
+version: 0.1.1
 license: MIT
 repository-code: "https://github.com/jinbora0720/geom-nmf"
 url: "https://github.com/jinbora0720/geom-nmf"
