@@ -1,6 +1,6 @@
 [project]
 name = "geom-nmf"
-version = "0.1.0a0"
+version = "0.1.0"
 description = "Geometric non-negative matrix factorization (GeomNMF) via maximum-volume simplex fitting."
 authors = [
     { name = "Bora Jin", email = "jinbora0720@gmail.com" },
