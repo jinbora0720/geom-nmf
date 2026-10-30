@@ -19,7 +19,7 @@ authors:
   - family-names: Datta
     given-names: Abhirup
     affiliation: Johns Hopkins University
-version: 0.1.2
+version: 0.1.3
 license: MIT
 repository-code: "https://github.com/jinbora0720/geom-nmf"
 url: "https://github.com/jinbora0720/geom-nmf"
