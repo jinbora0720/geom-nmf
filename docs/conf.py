@@ -10,8 +10,8 @@ from importlib.metadata import PackageNotFoundError, version as _version
 sys.path.insert(0, os.path.abspath(os.path.join("..", "src")))
 
 project = "geom-nmf"
-author = "Bora Jin"
-copyright = "2026, Bora Jin"
+author = "Bora Jin and Abhirup Datta"
+copyright = "2026, Bora Jin and Abhirup Datta"
 
 try:
     release = _version("geom-nmf")

@@ -97,6 +97,11 @@ barplot_Phi(Phi_hat, feature_labels=["PM1", "PM2.5", "PM10", "CO", "NO2", "O3"])
   and keeps the result only if it increases the simplex volume.
 - A `RuntimeWarning` is raised if the exhaustive search would exceed 50 million subsets.
 
+## Authors
+
+- **Bora Jin** (Colorado School of Mines) — maintainer
+- **Abhirup Datta** (Johns Hopkins University)
+
 ## Citation
 
 GeomNMF is described in:
@@ -140,4 +145,4 @@ tests, and build the documentation.
 
 ## License
 
-&copy; 2026 Bora Jin. Released under the [MIT License](LICENSE).
+&copy; 2026 Bora Jin and Abhirup Datta. Released under the [MIT License](LICENSE).
