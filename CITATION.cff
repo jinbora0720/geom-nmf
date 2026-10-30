@@ -16,7 +16,10 @@ authors:
     email: jinbora0720@gmail.com
     affiliation: Colorado School of Mines
     # orcid: "https://orcid.org/0000-0000-0000-0000"
-version: 0.1.1
+  - family-names: Datta
+    given-names: Abhirup
+    affiliation: Johns Hopkins University
+version: 0.1.2
 license: MIT
 repository-code: "https://github.com/jinbora0720/geom-nmf"
 url: "https://github.com/jinbora0720/geom-nmf"

@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - Oct 30, 2026
+
+### Changed
+- Documentation: Coauthor added in pyproject.toml and CITATION.cff.
+
+
 ## [0.1.1] - Oct 19, 2026
 
 ### Changed
